@@ -5,28 +5,20 @@ class Logout {
     public function exec() {
         global $p;
         global $res;
+        global $currentuser;
 
-        $required_fields = array("username", "device");
+        $required_fields = array("sys_auth_token");
 
         \Mytfg\Objects\RequestValidator::lock("contains", $p, $required_fields);
 
-        $username = $p["username"];
-        $device   = $p["device"];
+        $token = $p["sys_auth_token"];
 
-        if (\Mytfg\Objects\User::usernameExists($username)) {
-            $user = \Mytfg\Objects\User::get($username);
-                    $auth = $user->auth($device, true, $expiretime);
-                    $refs = array();
-                    $res->set("result", $auth->toArray($refs));
-                    $res->set("references", $refs);
-                    $res->send(200);
-                }
-            } else {
-                $res->code(401);
-                $res->send();
-            }
+        if ($currentuser->hasAuth($token)) {
+            $currentuser->removeAuth($token);
+            $res->send(200);
         } else {
-            $res->code(400, "User does not exist");
+            // If not logged in.
+            $res->code(401, "Invalid authentication token");
             $res->send();
         }
     }

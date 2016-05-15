@@ -1,7 +1,7 @@
 <?php
 namespace Mytfg\Api\Auth;
 
-class Login {
+class Validate {
     public function __construct() {
 
     }
@@ -9,36 +9,16 @@ class Login {
     public function exec() {
         global $p;
         global $res;
+        global $currentuser;
 
-        $required_fields = array("username", "token", "device");
+        $required_fields = array("sys_auth_token");
 
         \Mytfg\Objects\RequestValidator::lock("contains", $p, $required_fields);
 
-        $username = $p["username"];
-        $token    = $p["token"];
-        $device   = $p["device"];
-
-        if (\Mytfg\Objects\User::usernameExists($username)) {
-            $user = \Mytfg\Objects\User::get($username);
-
-            if ($user->hasAuth($device)) {
-                $auth = $user->auth($device);
-                if ($auth->validate($device, $token, $user)) {
-                    $res->set("result", true);
-                    $res->send(200);
-                } else {
-                    $res->set("result", false);
-                    $res->code(200, "Invalid token");
-                    $res->send();
-                }
-            } else {
-                $res->set("result", false);
-                $res->code(200, "Unknown device");
-                $res->send();
-            }
+        if ($currentuser->hasAuth($p["sys_auth_token"])) {
+            $res->send(200);
         } else {
-            $res->code(400, "User does not exist");
-            $res->send();
+            $res->send(401);
         }
     }
 }
