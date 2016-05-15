@@ -71,14 +71,14 @@ abstract class AppObject {
             $res->send(500);
         }
         $r->closeCursor();
-        return AppObject::loadLocal($localid, $type);
+        return AppObject::loadLocal($localid, $type, null, $id);
     }
 
-    public static function loadLocal($id, $type, $data = null) {
+    public static function loadLocal($id, $type, $data = null, $gid = false) {
         global $res;
-        if (is_null($data) || !isset($data["gid"])) {
+        if (!($gid === false) && (is_null($data) || !isset($data["gid"]))) {
             $gid = AppObject::getGlobalId($id, $type);
-        } else {
+        } elseif ($gid === false) {
             $gid = $data["gid"];
         }
 

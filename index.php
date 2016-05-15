@@ -26,10 +26,8 @@ Objects\Call::parse();
 $p = $call["params"];
 
 // Extract authentication
-if (isset($p["sys_auth_username"]) && isset($p["sys_auth_token"]) && isset($p["sys_auth_device"])) {
-	$_SESSION["sys_auth_username"] = $p["sys_auth_username"];
+if (isset($p["sys_auth_token"])) {
 	$_SESSION["sys_auth_token"]    = $p["sys_auth_token"];
-	$_SESSION["sys_auth_device"]   = $p["sys_auth_device"];
 }
 // Validate authentication
 global $currentuser;

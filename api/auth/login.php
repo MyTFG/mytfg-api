@@ -34,7 +34,7 @@ class Login {
                     } else {
                         $expiretime = 0;
                     }
-                    $auth = $user->auth($device, true, $expiretime);
+                    $auth = $user->auth($device, $expiretime);
                     $refs = array();
                     $res->set("result", $auth->toArray($refs));
                     $res->set("references", $refs);

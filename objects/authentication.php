@@ -14,11 +14,11 @@ class Authentication extends AppObject {
         $this->lastused   = 0;       // Never
         $this->expiretime = 0;       // Never
         $this->created  = time();
-        $this->generateToken();
     }
 
     public function create() {
         global $res;
+        $this->generateToken();
         if (!empty($this->device) && !empty($this->token) && ($this->context instanceof AppObject)) {
             $query = Mysql::insert("authentications", array(
                     "context"    => $this->context->getGid(),
@@ -70,11 +70,11 @@ class Authentication extends AppObject {
 
         $this->id         = $data["id"];
         $this->device     = $data["device"];
-        $this->context    = AppObject::loadObj($data["context"]);
         $this->token      = $data["token"];
         $this->created    = $data["created"];
         $this->lastused   = $data["lastused"];
         $this->expiretime = $data["expiretime"];
+        $this->context    = AppObject::loadObj($data["context"]);
 
         return true;
     }
@@ -122,7 +122,8 @@ class Authentication extends AppObject {
     * Generates a new token.
     */
     public function generateToken() {
-        $this->setToken(bin2hex(openssl_random_pseudo_bytes(48)));
+        $true = true;
+        $this->setToken(bin2hex(openssl_random_pseudo_bytes(48, $true)));
     }
 
     /**
@@ -210,6 +211,31 @@ class Authentication extends AppObject {
             $start = max($this->created, $this->lastused);
             return $start + $this->expiretime;
         }
+    }
+
+    public function isExpired() {
+        $expiretime = $this->getExpireTimestamp();
+        if ($expiretime == 0) {
+            return false;
+        } else {
+            return ($expiretime - time()) > 0;
+        }
+    }
+
+
+    public static function get($token) {
+        $query = Mysql::select("authentications", array(
+            "token" => $token
+        ));
+        $r = Mysql::query($query, "\\authentication");
+        if ($r->rowCount() == 0) {
+            return false;
+        }
+        $data = $r->fetch();
+        $r->closeCursor();
+        $id = $data["id"];
+        $auth = AppObject::loadObj($id, "authentication", $data);
+        return $auth;
     }
 
 }

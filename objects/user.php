@@ -54,9 +54,10 @@ class User extends AppObject {
                 "context" => $this->getGid()
             ));
         $authData = Mysql::query($query, "\\authentication");
+        global $res;
         while ($ds = $authData->fetch()) {
             $auth = AppObject::loadObj($ds["id"], "authentication", $ds);
-            $this->authentications[$auth->getDevice()] = $auth;
+            $this->authentications[$auth->getToken()] = $auth;
         }
         $authData->closeCursor();
 
@@ -128,33 +129,24 @@ class User extends AppObject {
 	}
 
     // Checks if an authentication for the given device is present.
-    public function hasAuth($device) {
-        return isset($this->authentications[$device]);
+    public function hasAuth($token) {
+        return isset($this->authentications[$token]) && !$this->authentications[$token]->isExpired();
     }
 
-    // Adds an authentication for the given device (or just returns it, if present)
-    public function auth($device, $renew = false, $expiretime = 0) {
-        if ($this->hasAuth($device)) {
-            $auth = $this->authentications[$device];
-            if ($renew) {
-                $auth->generateToken();
-                $auth->setExpiretime($expiretime);
-                $auth->save();
-            }
-        } else {
-            $auth = new Authentication();
-            $auth->setContext($this);
-            $auth->setDevice($device);
-            $auth->setExpiretime($expiretime);
-            $auth->create();
-            $this->authentications[$device] = $auth;
-        }
+    // Adds an authentication with the given device
+    public function auth($device, $expiretime = 0) {
+        $auth = new Authentication();
+        $auth->setContext($this);
+        $auth->setDevice($device);
+        $auth->setExpiretime($expiretime);
+        $auth->create();
+        $this->authentications[$auth->getToken()] = $auth;
         return $auth;
     }
 
-    public function removeAuth($device) {
-        if ($this->hasAuth($device)) {
-            $auth = $this->authentications[$device];
+    public function removeAuth($token) {
+        if ($this->hasAuth($token)) {
+            $auth = $this->authentications[$token];
             $auth->delete();
         }
         return true;
@@ -310,27 +302,27 @@ class User extends AppObject {
 	public static function validateAuth() {
 		$noUser = new User();
 		global $res;
-		if (isset($_SESSION["sys_auth_username"])) {
-			$username = $_SESSION["sys_auth_username"];
+		if (isset($_SESSION["sys_auth_token"])) {
 			$token	  = $_SESSION["sys_auth_token"];
-			$device   = $_SESSION["sys_auth_device"];
 		} else {
 			$res->log("No authentication fields found");
 			return $noUser;
 		}
 
-		if (User::usernameExists($username)) {
-			$user = User::get($username);
-			if ($user->hasAuth($device)) {
-				$auth = $user->auth($device);
-				if ($auth->getToken() == $token) {
-					$res->log("User $username authenticated for device $device");
-					return $user;
-				} else {
-					$res->log("Invalid token for device $device and user $username");
-				}
+        $auth = Authentication::get($token);
+
+		if ($auth !== false) {
+            if ($auth->isExpired()) {
+                $res->log("Token expired");
+                return $noUser;
+            }
+            $user = $auth->getContext();
+            $username = $user->getUsername();
+			if ($user->hasAuth($token)) {
+				$res->log("User $username authenticated");
+				return $user;
 			} else {
-				$res->log("Invalid Device for $username");
+				$res->log("Invalid token for user $username");
 			}
 		}
 
