@@ -9,8 +9,8 @@ This module provides the functions to authenticate users to the API and manage t
 ### Overview
 | Function		| Description  |
 |---------------------- | :------------ |
-| [Login](login.md)     | Creates a new authentication token for a device |
-| [Logout](logout.md)   | Deletes the authentication for a device |
+| [Login](login.md)     | Creates a new authentication token |
+| [Logout](logout.md)   | Deletes the given token |
 | [Validate](validate.md)     | Checks whether a given authentication is still valid |
 
 
@@ -45,4 +45,4 @@ This can be used after a restart of your application or something like this.
 ### Logout?
 Yes please. If you use a token which is valid for unlimited time, you should delete this token at some point. If possible, do not just request a new token while leaving an unused valid token. This might be a possible security risk.
 
-Time-limited tokens will get deleted after a while, you don't have to worry about them.
+Time-limited tokens will get deleted after a while, you don't have to worry about them.orry about them.y about them.

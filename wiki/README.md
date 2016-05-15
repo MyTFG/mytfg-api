@@ -13,7 +13,9 @@ To use the API, it is helpful to understand the **basics** of the API:
 * The [result format](gs/result.md) you will get from the API.
 
 ## Modules
-* Auth
-* User
+* [Auth](api/auth/index.md)
+* [User](api/user/index.md)
 * Menu
 * Ticket
+
+## Objects
